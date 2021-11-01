@@ -181,6 +181,17 @@
 
         clientLogin() {
             if (this._clientAuth == null) {
+
+                // Look in session storage as first cache
+                let creds = window.sessionStorage.getItem('cve-services-creds');
+
+                if (creds != undefined) {
+                    let parsed_creds = JSON.parse(creds);
+
+                    this.cacheLogin(parsed_creds);
+                    return Promise.resolve(this._clientAuth);
+                }
+
                 let getFunc;
                 let setFunc;
 
@@ -191,6 +202,16 @@
                 }
             } else {
                 return Promise.resolve(this._clientAuth);
+            }
+        }
+
+        cacheLogin(creds) {
+            if (this._clientAuth == null) {
+                this._clientAuth = creds;
+            }
+
+            if (window.sessionStorage.getItem('cve-services-creds') == null) {
+                sessionStorage.setItem('cve-services-creds', JSON.stringify(creds));
             }
         }
 
@@ -224,8 +245,9 @@
                     .then(keyBuf => {
                         let keyStr = new TextDecoder().decode(keyBuf);
                         let [user, org, key] = keyStr.split('|');
+                        let creds = { key, org, user };
 
-                        object._clientAuth = { key, org, user };
+                        object.cacheLogin(creds);
 
                         return object._clientAuth;
                     });
@@ -255,8 +277,9 @@
                 .then(cred => {
                     let [user, org] = cred.name.split("|");
                     let key = cred.password;
+                    let creds = { key, org, user };
 
-                    this._clientAuth = {key, org, user};
+                    this.cacheLogin(creds);
 
                     return this._clientAuth;
                 });
