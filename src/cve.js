@@ -253,8 +253,7 @@
                     }
                 })
                 .then(cred => {
-
-                    let [user, org] = cred.id.split("|");
+                    let [user, org] = cred.name.split("|");
                     let key = cred.password;
 
                     this._clientAuth = {key, org, user};
@@ -314,29 +313,12 @@
                 let user = prompt('CVE API account username: ');
                 let key = prompt('CVE API KEY: ');
 
-                let loginForm = document.createElement('form');
-                loginForm.setAttribute('style', 'display: none;');
+                let cred = new PasswordCredential({ id: 'cve-services',
+                                                    name: `${user}|${org}`,
+                                                    password: key });
 
-                let loginFormUser = document.createElement('input');
-
-                loginFormUser.setAttribute('type', 'hidden');
-                loginFormUser.setAttribute('name', 'username');
-                loginFormUser.setAttribute('value', `${user}|${org}`);
-                loginFormUser.setAttribute('autocomplete', 'username');
-
-                let loginFormPass = document.createElement('input');
-                loginFormPass.setAttribute('type', 'password');
-                loginFormPass.setAttribute('name', 'password');
-                loginFormPass.setAttribute('value', key);
-                loginFormPass.setAttribute('autocomplete', 'current-password');
-
-                loginForm.append(loginFormUser);
-                loginForm.append(loginFormPass);
-
-                document.body.append(loginForm);
-
-                let cred = new PasswordCredential(loginForm);
-                navigator.credentials.store(cred);
+                navigator.credentials.store(cred)
+                    .then(result => console.log(result));
 
                 resolve(cred);
             });
