@@ -28,15 +28,24 @@
     class CveServices {
         constructor(serviceUri) {
             if (serviceUri == null) {
-                serviceUri = 'https://cweawg.mitre.org/api';
+                serviceUri = 'https://cveawg-test.mitre.org/api';
             }
 
-            this._request = new CveServicesRequest(serviceUri);
+            this._middleware = new CveServicesMiddleware();
+            this._request = null;
+        }
+
+        login(user, org, key) {
+            return this._middleware.setCredentials({ user, org, key })
+                       .then(res => res.data);
+        }
+
+        logout() {
+            return this._middleware.destroy();
         }
 
         getCveIds() {
-            return this._request.get('cve-id')
-                .then(data => data.cve_ids);
+            return this._middleware.get('cve-id');
         };
 
         reserveCveIds(args) {
@@ -157,6 +166,60 @@
                       this._request.get(['org', org, 'user', username].join('/')));
         }
     };
+
+    class CveServicesMiddleware {
+        constructor() {
+            this.worker = this.installWorker();
+        }
+
+        installWorker() {
+            const worker = new Worker("./sw.js");
+
+            if (worker === undefined) {
+                throw Error("CveServices failed to install middleware. Cannot continue.");
+            }
+
+            return worker;
+        }
+
+        simpleMessage(msg) {
+            return new Promise(resolve => {
+                // this.worker.onmessage = resolve;
+                this.worker.addEventListener("message", resolve);
+                this.worker.postMessage(msg);
+            }, reject => {
+                this.worker.onmessageerror = reject;
+            });
+        }
+
+        echo() {
+            return this.simpleMessage({messageType: "echo"});
+        }
+
+        setCredentials(creds) {
+            return this.simpleMessage({
+                messageType: "setCredentials",
+                creds,
+            });
+        }
+
+        get(path, query) {
+            return this.simpleMessage({
+                messageType: "get",
+                path, query
+            }).then(res => {
+                if (res.data.error) {
+                    return Promise.reject(res.data.error);
+                } else {
+                    return res.data.data;
+                }
+            });
+        }
+
+        destroy() {
+            this.worker.terminate();
+        }
+    }
 
     class CveServicesRequest {
         constructor(serviceUri) {
@@ -428,6 +491,7 @@
 
     if (window != undefined) {
         window.CveServices = CveServices;
+        window.CveServicesMiddleware = CveServicesMiddleware;
     }
 
     return CveServices;

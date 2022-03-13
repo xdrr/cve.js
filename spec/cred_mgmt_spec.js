@@ -31,24 +31,24 @@ describe("Credential management", () => {
     cs = new CveServices();
   });
 
-  it("Registers new user", () => {
-    expect(
-      cs.login(...args)
-    ).toBe(true);
+  it("Registers new user", async () => {
+    expectAsync(
+      cs.login(...user_1)
+    ).toBeResolvedTo({data: 'ok'});
   });
 
-  it("Logs out session", () => {
-    expect(
+  it("Logs out session", async () => {
+    expectAsync(
       cs.login(...user_1)
-    ).toBe(true);
+    ).toBeResolvedTo({data: 'ok'});
 
-    expect(
+    expectAsync(
       cs.logout()
-    ).toBe(true);
+    ).toBeResolved();
   });
 
   it("Rejects API methods without creds", async () => {
-    await expectAsync(cs.getCveIds()).toBeRejectedWith(CredentialError);
+    expectAsync(cs.getCveIds()).toBeRejectedWith(CredentialError);
   });
 
   it("Rejects API methods after logout", async () => {
