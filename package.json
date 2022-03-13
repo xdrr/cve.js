@@ -11,7 +11,7 @@
   "devDependencies": {
     "@openapitools/openapi-generator-cli": "^2.4.1",
     "jasmine-browser-runner": "^1.0.0",
-    "jasmine-core": "^4.0.1",
+    "jasmine-core": "^4.0.1"
   },
   "repository": "https://github.com/xdrr/cve.js"
 }
