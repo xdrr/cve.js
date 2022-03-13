@@ -1,0 +1,17 @@
+{
+  "name": "cve-js",
+  "version": "0.0.9",
+  "description": "Pure JS client for CVE Services REST API",
+  "main": "src/cve.js",
+  "scripts": {
+    "test": "npx jasmine-browser-runner runSpecs"
+  },
+  "author": "Ben Nott <pajexali@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@openapitools/openapi-generator-cli": "^2.4.1",
+    "jasmine-browser-runner": "^1.0.0",
+    "jasmine-core": "^4.0.1",
+  },
+  "repository": "https://github.com/xdrr/cve.js"
+}
