@@ -1,7 +1,7 @@
 /*
   * CVE Services REST API - ECMAScript 6 Client v1.0.0
   *
-  * Copyright 2021, Ben N (pajexali@gmail.com)
+  * Copyright 2022, Ben N (pajexali@gmail.com)
   * See LICENSE for a full copy of the license.
   *
   * Provides simple JS interface to perform common actions in the CVE API for an
@@ -113,6 +113,30 @@
             return this._request.orgName
                 .then(org =>
                     this._request.get(['org', org].join('/')));
+        }
+
+        updateOrgInfo(org_info) {
+            return this._request.orgName
+                .then(org =>
+                    this._request.put(`org/${org}`, org_info));
+        }
+
+        createOrgUser(user_info) {
+            return this._request.orgName
+                .then(org =>
+                    this._request.post(`org/${org}/user`, undefined, user_info));
+        }
+
+        updateOrgUser(username, user_info) {
+            return this._request.orgName
+                .then(org =>
+                    this._request.put(`org/${org}/user/${username}`, user_info));
+        }
+
+        resetOrgUserApiKey(username) {
+            return this._request.orgName
+                .then(org =>
+                    this._request.put(`org/${org}/user/${username}/reset_secret`));
         }
 
         getOrgUsers() {
@@ -369,7 +393,7 @@
                     let queryPath = '';
 
                     if (query) {
-                        queryPath = '?' + new URLSearchParams(query).toString();
+                        queryPath = new URLSearchParams(query).toString();
                     }
 
                     if (body) {
@@ -377,7 +401,7 @@
                         opts.body = JSON.stringify(body);
                     }
 
-                    return fetch(`${this._serviceUri}/${path}${queryPath}`, opts);
+                    return fetch(`${this._serviceUri}/${path}?${queryPath}`, opts);
                 });
         }
 
@@ -389,7 +413,7 @@
                     let queryPath = '';
 
                     if (query) {
-                        queryPath = '?' + new URLSearchParams(query).toString();
+                        queryPath = new URLSearchParams(query).toString();
                     }
 
                     if (body) {
