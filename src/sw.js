@@ -11,12 +11,26 @@ const storage = {};
 
 setCredentials = (creds) => {
     storage.creds = creds;
-    postMessage({ data: 'ok' });
 };
 
 let serviceUri = 'https://cveawg-test.mitre.org/api';
 
-get = (path, query) => {
+clientReply = (e, msg) => {
+    e.ports[0].postMessage(msg);
+}
+
+checkSession = (e) => {
+    if (!('creds' in storage)) {
+        clientReply(e, { error: "Not logged in." });
+        return false;
+    }
+
+    return true;
+}
+
+get = (event) => {
+    let { query, path } = event.data;
+
     let opts = {
         headers: {
             'CVE-API-KEY': storage.creds.key,
@@ -34,9 +48,9 @@ get = (path, query) => {
     return fetch(`${serviceUri}/${path}?${queryPath}`, opts)
         .then(res => {
             if (res.ok) {
-                postMessage({ data: res.body });
+                clientReply(event, { data: res.body });
             } else {
-                postMessage({ error: res.status });
+                clientReply(event, { error: res.status });
             }
         });
 };
@@ -44,13 +58,16 @@ get = (path, query) => {
 self.onmessage = e => {
     switch (e.data.messageType) {
         case 'echo':
-            postMessage({ data: 'echo' });
+            clientReply(e, {"data": "echo"});
             break;
         case 'setCredentials':
             setCredentials(e.data.creds);
+            clientReply(e, {"data": "ok"});
             break;
         case 'get':
-            get(e.data.path, e.data.query);
+            if (checkSession(e)) {
+                get(e);
+            }
             break;
     }
 };

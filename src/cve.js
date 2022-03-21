@@ -25,6 +25,10 @@
 
     class NoCredentialsError extends Error {};
 
+    class CredentialError extends Error {};
+
+    class MiddlewareError extends Error {};
+
     class CveServices {
         constructor(serviceUri) {
             if (serviceUri == null) {
@@ -36,8 +40,7 @@
         }
 
         login(user, org, key) {
-            return this._middleware.setCredentials({ user, org, key })
-                       .then(res => res.data);
+            return this._middleware.setCredentials({ user, org, key });
         }
 
         logout() {
@@ -169,24 +172,27 @@
 
     class CveServicesMiddleware {
         constructor() {
-            this.worker = this.installWorker();
-        }
+            this.worker;
 
-        installWorker() {
-            const worker = new Worker("./sw.js");
-
-            if (worker === undefined) {
-                throw Error("CveServices failed to install middleware. Cannot continue.");
+            if (!('serviceWorker' in navigator)) {
+                throw MiddlewareError("ServiceWorkers are not available in your browser");
             }
 
-            return worker;
+            navigator.serviceWorker.register("sw.js")
+                     .then(reg => {
+                         this.worker = reg;
+                     });
         }
 
         simpleMessage(msg) {
             return new Promise(resolve => {
-                // this.worker.onmessage = resolve;
-                this.worker.addEventListener("message", resolve);
-                this.worker.postMessage(msg);
+                let channel = new MessageChannel();
+
+                channel.port1.onmessage = (msg) => {
+                    resolve(msg.data);
+                };
+
+                this.worker.active.postMessage(msg, [channel.port2]);
             }, reject => {
                 this.worker.onmessageerror = reject;
             });
@@ -208,16 +214,16 @@
                 messageType: "get",
                 path, query
             }).then(res => {
-                if (res.data.error) {
-                    return Promise.reject(res.data.error);
+                if ('error' in res) {
+                    return Promise.reject(res.error);
                 } else {
-                    return res.data.data;
+                    return res.data;
                 }
             });
         }
 
         destroy() {
-            this.worker.terminate();
+            return this.worker.unregister();
         }
     }
 
