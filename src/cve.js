@@ -34,11 +34,11 @@
 
     class CveServices {
         constructor(serviceUri) {
-            if (serviceUri == null) {
+            if (serviceUri == undefined) {
                 serviceUri = 'https://cveawg-test.mitre.org/api';
             }
 
-            this._middleware = new CveServicesMiddleware();
+            this._middleware = new CveServicesMiddleware(serviceUri);
             this._request = null;
         }
 
@@ -178,17 +178,38 @@
     };
 
     class CveServicesMiddleware {
-        constructor() {
+        constructor(serviceUri) {
             this.worker;
 
             if (!('serviceWorker' in navigator)) {
-                throw MiddlewareError("ServiceWorkers are not available in your browser");
+                throw MiddlewareError("Service Workers are not available in your browser.");
+            }
+
+            let setServiceUri = () => {
+                let msg = {
+                    type: 'init',
+                    serviceUri,
+                };
+
+                this.send(msg);
             }
 
             navigator.serviceWorker.register("sw.js")
                      .then(reg => {
                          this.worker = reg;
-                     });
+
+                         reg.onupdatefound = () => {
+                             const worker = reg.installing;
+
+                             if (worker) {
+                                 worker.onstatechange = () => {
+                                    if (worker.state === 'activated') {
+                                        setServiceUri();
+                                    }
+                                 }
+                             }
+                         }
+                    });
         }
 
         simpleMessage(msg) {

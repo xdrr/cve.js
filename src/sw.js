@@ -16,7 +16,6 @@ setCredentials = (creds) => {
     storage.creds = creds;
 };
 
-let serviceUri = 'https://cveawg-test.mitre.org/';
 
 clientReply = (e, msg) => {
     e.ports[0].postMessage(msg);
@@ -43,7 +42,7 @@ defaultOpts = () => {
 };
 
 getURL = (path, query) => {
-    let url = new URL(`/api/${path}`, serviceUri);
+    let url = new URL(`/api/${path}`, storage.serviceUri);
 
     if (query) {
         for (const [k, v] of Object.entries(query)) {
@@ -62,6 +61,9 @@ doFetch = (event, url, opts) => {
             } else {
                 clientReply(event, { error: res.status });
             }
+        })
+        .catch(err => {
+            clientReply(event, { error: err });
         });
 };
 
@@ -85,12 +87,18 @@ requestService = (event) => {
 
 self.onmessage = e => {
     switch (e.data.type) {
+        case 'init':
+            if ('serviceUri' in e.data) {
+                storage.serviceUri = e.data.serviceUri;
+                clientReply(e, {data: 'ok'});
+            }
+            break;
         case 'echo':
-            clientReply(e, {"data": "echo"});
+            clientReply(e, {data: 'echo'});
             break;
         case 'login':
             setCredentials(e.data.creds);
-            clientReply(e, {"data": "ok"});
+            clientReply(e, {data: 'ok'});
             break;
         case 'request':
             if (checkSession(e)) {
@@ -99,11 +107,11 @@ self.onmessage = e => {
             break;
         case 'getOrg':
             if (checkSession(e)) {
-                clientReply(e, {"data": storage.creds.org });
+                clientReply(e, {data: storage.creds.org });
             }
             break;
         default:
-            clientReply(e, {"error": "not supported"});
+            clientReply(e, {error: 'Not supported'});
             break;
     }
 };
