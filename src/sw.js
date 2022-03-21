@@ -13,11 +13,11 @@ setCredentials = (creds) => {
     storage.creds = creds;
 };
 
-let serviceUri = 'https://cveawg-test.mitre.org/api';
+let serviceUri = 'https://cveawg-test.mitre.org/';
 
 clientReply = (e, msg) => {
     e.ports[0].postMessage(msg);
-}
+};
 
 checkSession = (e) => {
     if (!('creds' in storage)) {
@@ -26,26 +26,33 @@ checkSession = (e) => {
     }
 
     return true;
-}
+};
 
-get = (event) => {
-    let { query, path } = event.data;
-
-    let opts = {
+defaultOpts = () => {
+    return {
         headers: {
+            'content-type': 'application/json',
             'CVE-API-KEY': storage.creds.key,
             'CVE-API-ORG': storage.creds.org,
             'CVE-API-USER': storage.creds.user,
-        }
+        },
     };
+};
 
-    let queryPath = '';
+getURL = (path, query) => {
+    let url = new URL(`/api/${path}`, serviceUri);
 
     if (query) {
-        queryPath = new URLSearchParams(query).toString();
+        for (const [k, v] of Object.entries(query)) {
+            url.searchParams.append(k, v);
+        }
     }
 
-    return fetch(`${serviceUri}/${path}?${queryPath}`, opts)
+    return url.toString();
+};
+
+doFetch = (event, url, opts) => {
+    return fetch(url, opts)
         .then(res => {
             if (res.ok) {
                 clientReply(event, { data: res.body });
@@ -55,18 +62,32 @@ get = (event) => {
         });
 };
 
+requestService = (event) => {
+    let { query, path, method } = event.data;
+
+    let opts = defaultOpts();
+    let url = getURL(path, query);
+
+    if (method in ['PUT', 'POST'] && 'body' in event.data) {
+        opts.method = method;
+        opts.body = JSON.stringify(event.data.body);
+    }
+
+    return doFetch(event, url, opts);
+};
+
 self.onmessage = e => {
-    switch (e.data.messageType) {
+    switch (e.data.type) {
         case 'echo':
             clientReply(e, {"data": "echo"});
             break;
-        case 'setCredentials':
+        case 'login':
             setCredentials(e.data.creds);
             clientReply(e, {"data": "ok"});
             break;
-        case 'get':
+        case 'request':
             if (checkSession(e)) {
-                get(e);
+                requestService(e);
             }
             break;
     }

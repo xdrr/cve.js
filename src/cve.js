@@ -39,6 +39,8 @@
             this._request = null;
         }
 
+        // Session mgmt
+
         login(user, org, key) {
             return this._middleware.setCredentials({ user, org, key });
         }
@@ -47,13 +49,15 @@
             return this._middleware.destroy();
         }
 
+        // API methods
+
         getCveIds() {
             return this._middleware.get('cve-id');
         };
 
         reserveCveIds(args) {
-            return this._request.post('cve-id', args)
-                .then(data => data.cve_ids);
+            return this._middleware.post('cve-id', args)
+                       .then(data => data.cve_ids);
         }
 
         reserveCveId(year = new Date().getFullYear()) {
@@ -198,28 +202,59 @@
             });
         }
 
-        echo() {
-            return this.simpleMessage({messageType: "echo"});
-        }
+        serviceRequest(request) {
+            let msg = {
+                type: 'request',
+                ...request,
+            };
 
-        setCredentials(creds) {
-            return this.simpleMessage({
-                messageType: "setCredentials",
-                creds,
-            });
-        }
-
-        get(path, query) {
-            return this.simpleMessage({
-                messageType: "get",
-                path, query
-            }).then(res => {
+            return this.simpleMessage(msg).then(res => {
                 if ('error' in res) {
                     return Promise.reject(res.error);
                 } else {
                     return res.data;
                 }
             });
+        }
+
+        echo() {
+            return this.simpleMessage({type: 'echo'});
+        }
+
+        setCredentials(creds) {
+            let msg = {
+                type: 'login',
+                creds,
+            };
+
+            return this.simpleMessage(msg);
+        }
+
+        get(path, query) {
+            let req = {
+                method: 'GET',
+                path, query
+            };
+
+            return this.serviceRequest(req);
+        }
+
+        post(path, query, body) {
+            let req = {
+                method: 'POST',
+                path, query, body
+            };
+
+            return this.serviceRequest(req);
+        }
+
+        put(path, query, body) {
+            let req = {
+                method: 'PUT',
+                path, query, body
+            };
+
+            return this.serviceRequest(req);
         }
 
         destroy() {
