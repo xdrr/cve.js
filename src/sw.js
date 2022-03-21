@@ -6,6 +6,9 @@
 //
 // Description: Handles exchange of API requests with credentials.
 //
+// Copyright 2022, Ben Nott <pajexali@gmail.com>.
+// See LICENSE for a full copy of the license.
+//
 
 const storage = {};
 

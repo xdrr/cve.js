@@ -1,12 +1,15 @@
-/*
-  * CVE Services REST API - ECMAScript 6 Client v1.0.0
-  *
-  * Copyright 2022, Ben N (pajexali@gmail.com)
-  * See LICENSE for a full copy of the license.
-  *
-  * Provides simple JS interface to perform common actions in the CVE API for an
-  * authenticated user, whilst storing API credentials locally in the browser.
-*/
+//
+// CVE.js
+// Filename: cve.js
+//
+// Author: Ben Nott <pajexali@gmail.com>
+//
+// Description: Exposes MITRE CVE API through CveServices using Service Worker
+// middleware for credential storage and request handling.
+//
+// Copyright 2022, Ben Nott <pajexali@gmail.com>.
+// See LICENSE for a full copy of the license.
+//
 
 (function (root, factory) {
     if (typeof define === 'function' && define.amd) {
