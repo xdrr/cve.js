@@ -12,10 +12,25 @@
 
 const storage = {};
 
-setCredentials = (creds) => {
-    storage.creds = creds;
+destroySession = () => {
+    if ('creds' in storage) {
+        delete storage['creds'];
+    }
 };
 
+setSessionTimer = () => {
+    let defaultTimeout = 1000 * 60 * 60;
+
+    setTimeout(
+        destroySession,
+        defaultTimeout
+    );
+};
+
+setCredentials = (creds) => {
+    storage.creds = creds;
+    setSessionTimer();
+};
 
 clientReply = (e, msg) => {
     e.ports[0].postMessage(msg);
@@ -83,7 +98,6 @@ requestService = (event) => {
 
     return doFetch(event, url, opts);
 };
-
 
 self.onmessage = e => {
     switch (e.data.type) {
