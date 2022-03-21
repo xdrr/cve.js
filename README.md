@@ -1,47 +1,75 @@
-# CVE.js - ECMAScript 6 client-side library for the CVE REST API
+# CVE.js
 
-Provides an ECMAScript 6 client-side library for accessing the [CVE REST
-API](https://github.com/CVEProject/cve-services), with secure local credential
-storage.
+CVE.js is a JS browser library for providing serverless access to the [CVE
+services REST API](https://github.com/CVEProject/cve-services).
 
-## Synopsis
+## Features
 
-```
+CVE.js runs in the browser and provides:
+
+ * Serverless access to the CVE services API.
+ * Secure credential management through [Service Workers](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API).
+ * Multi-user session management and session timeouts.
+ 
+ The following browsers are currently supported:
+ 
+ * Google Chrome / Chromium
+ * Firefox 
+ * Opera
+ * Microsoft Edge (>= v. 99 preferred)
+ * Safari
+ 
+ All versions of Internet Explorer are not supported.
+
+## Installation
+
+CVE.js can be integrated by the inclusion of the library in the appropriate component of your application.
+
+```html
 <script src="cve.js"></script>
 ```
 
-## Usage
+Be sure to deploy `cve.js` and `sw.js` at the root of the component that will be
+accessing `CveServices`. The Service Worker will assume this root as its scope
+of control.
 
-The library exposes to the global scope the class `CveServices` which may be
-instantiated in the browser:
+## How to use
 
+The library exposes the `CveServices` class to the `window` namespace.
+
+```js
+let client = new CveServices("〈API-URL〉");
 ```
-let client = new CveServices("API-URL");
+
+When an `〈API-URL〉` is not specified, it defaults to the production MITRE API.
+
+### Session management
+
+Before services may be requested from `CveServices`, a user must be logged in.
+
+``` js
+await client.login("user", "org", "key");
 ```
 
-When an URI is not specified, it defaults to the production MITRE API.
+After login, the active user's session will expire in 1 hour.
 
-## Browser Support
+The active user may be replaced by calling `login` with a different user's credentials:
 
-CVE.js uses the Browser Credential API to store user credentials with a fallback
-to LocalStorage to achieve support of all modern browsers. Those tested include:
-Chrome / Chromium, Firefox, Safari, Opera.
+``` js
+await client.login("user2", "org_6", "keyabcdef");
+```
 
-Should a browser (such as Firefox) achieve full support of the Browser
-Credential API, users will be automatically prompted to reenter their
-credentials so they made be stored in this method.
+The active session may be manually destroyed (along with the Service Worker in the user's browser) by calling `logout`:
 
-## Authentication
+``` js
+await client.logout();
+```
 
-When an API method is accessed and authenticating material has not been stored
-in the client-side, the user will be prompted to provide this information and it
-will be stored using either the Browser Credential API (if supported) or AES-GCM
-encrypted values in LocalStorage.
+### API Methods
 
-### Methods
+CVE services may be requested on behalf of the active user by calling the apppropriate API methods.
 
-All methods return Promises which resolve once (a) the authenticating material
-is both stored and retrieved, (b) the API call has returned from the server.
+Each method returns a Promise resolving to the API return value upon success.
 
 #### Retrieve organisation's reserved CVE IDs
 
