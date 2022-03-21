@@ -68,13 +68,17 @@ requestService = (event) => {
     let opts = defaultOpts();
     let url = getURL(path, query);
 
-    if (method in ['PUT', 'POST'] && 'body' in event.data) {
+    if (['PUT', 'POST'].includes(method)) {
         opts.method = method;
-        opts.body = JSON.stringify(event.data.body);
+
+        if ('body' in event.data) {
+            opts.body = JSON.stringify(event.data.body);
+        }
     }
 
     return doFetch(event, url, opts);
 };
+
 
 self.onmessage = e => {
     switch (e.data.type) {
@@ -89,6 +93,14 @@ self.onmessage = e => {
             if (checkSession(e)) {
                 requestService(e);
             }
+            break;
+        case 'getOrg':
+            if (checkSession(e)) {
+                clientReply(e, {"data": storage.creds.org });
+            }
+            break;
+        default:
+            clientReply(e, {"error": "not supported"});
             break;
     }
 };
