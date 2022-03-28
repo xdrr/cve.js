@@ -174,7 +174,7 @@
     };
 
     class CveServicesMiddleware {
-        constructor(serviceUri = 'https://cweawg.mitre.org/api', swPath = 'sw.js') {
+        constructor(serviceUri = 'https://cveawg.mitre.org/api', swPath = 'sw.js') {
             this.serviceUri = serviceUri;
             this.registration;
             this.swPath = swPath;
