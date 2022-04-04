@@ -104,7 +104,8 @@
             return this._middleware.get('cve-id/'.concat(id));
         }
 
-        updateCveId(id, record) {
+        updateCveId(id, state, org) {
+            let record = { state, org };
             return this._middleware.put('cve-id/'.concat(id), record);
         }
 
@@ -145,7 +146,7 @@
         updateOrgUser(username, userInfo) {
             return this._middleware.orgName
                 .then(orgName =>
-                    this._middleware.put(`org/${orgName}/user/${username}`, userInfo));
+                    this._middleware.put(`org/${orgName}/user/${username}`, undefined, userInfo));
         }
 
         resetOrgUserApiKey(username) {
