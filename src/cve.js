@@ -305,8 +305,12 @@
         }
 
         destroy() {
-            if (this.registration)
-                return this.registration.unregister();
+            if (this.registration) {
+                this.registration.unregister();
+                this.registration = undefined;
+
+                return Promise.resolve(true);
+            }
 
             return Promise.resolve(false);
         }
