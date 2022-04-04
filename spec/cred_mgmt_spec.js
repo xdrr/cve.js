@@ -5,7 +5,7 @@
 // Author: Ben N
 //
 
-describe("Credential management", () => {
+describe("Middleware session mgmt", () => {
   let cs = null;
 
   let user_1 = [
@@ -24,78 +24,61 @@ describe("Credential management", () => {
     "cna_short_name_2",
     "cna_username_2",
     "api_key",
-    0,                          // instant timeout
   ];
 
   beforeEach(() => {
-    cs = new CveServices();
+    cs = new CveServices("http://localhost:8080/api", "/__src__/sw.js");
   });
 
-  it("Registers new user", async () => {
-    expectAsync(
+  it("registers new user", async () => {
+    await expectAsync(
       cs.login(...user_1)
-    ).toBeResolvedTo({data: 'ok'});
+    ).toBeResolvedTo('ok');
   });
 
-  it("Logs out session", async () => {
-    expectAsync(
+  it("logs out session", async () => {
+    await expectAsync(
       cs.login(...user_1)
-    ).toBeResolvedTo({data: 'ok'});
-
-    expectAsync(
-      cs.logout()
-    ).toBeResolved();
-  });
-
-  it("Rejects API methods without creds", async () => {
-    expectAsync(cs.getCveIds()).toBeRejectedWith(CredentialError);
-  });
-
-  it("Rejects API methods after logout", async () => {
-     expect(
-      cs.login(...user_1)
-    ).toBe(true);
-
-    expect(
-      cs.logout()
-    ).toBe(true);
-
-    await expectAsync(cs.getCveIds()).toBeRejectedWith(CredentialError);
-  })
-
-  it("Does not logout empty session", () => {
-    expect(
-      cs.logout()
-    ).toBe(false);
-  });
-
-  it("Switches accounts", () => {
-    expect(
-      cs.login(user_1)
-    ).toBe(true);
-
-    // Convention 1: call login multiple times
-    expect(
-      cs.login(user_2)
-    ).toBe(true);
-
-    // Convention 2: logout then login
-    expect(
-      cs.logout(user_1)
-    ).toBe(true);
-
-    expect(
-      cs.login(user_1)
-    ).toBe(true);
-  });
-
-  it("Times out credentials", async () => {
-    expect(
-      cs.login(...user_3)
-    ).toBe(true);
+    ).toBeResolvedTo('ok');
 
     await expectAsync(
-      cs.getCveIds()
-    ).toBeRejectedWith(CredentialError);
+      cs.logout()
+    ).toBeResolvedTo(true);
+  });
+
+  it("rejects API methods without session", async () => {
+    return expectAsync(cs.getCveIds()).toBeRejected();
+  });
+
+  it("rejects API methods after logout", async () => {
+    await expectAsync(
+      cs.login(...user_1)
+    ).toBeResolvedTo('ok');
+
+    await expectAsync(
+      cs.logout()
+    ).toBeResolvedTo(true);
+  });
+
+  it("does not logout empty session", async () => {
+    await expectAsync(
+      cs.logout()
+    ).toBeResolvedTo(false);
+  });
+
+  it("switches accounts", async () => {
+    await expectAsync(
+      cs.login(user_1)
+    ).toBeResolvedTo('ok');
+
+    // Convention 1: call login multiple times
+    await expectAsync(
+      cs.login(user_2)
+    ).toBeResolvedTo('ok');
+
+    // Convention 2: logout then login
+    await expectAsync(
+      cs.logout()
+    ).toBeResolvedTo(true);
   });
 });
