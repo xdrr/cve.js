@@ -50,8 +50,8 @@
 
         // API methods
 
-        getCveIds() {
-            return this._middleware.get('cve-id');
+        getCveIds(args) {
+            return this._middleware.get('cve-id', args);
         };
 
         reserveCveIds(args) {
