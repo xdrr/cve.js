@@ -239,9 +239,9 @@
             return this.worker.then(worker => {
                 return this.simpleMessage(worker, msg).then(res => {
                     if ('error' in res) {
-                        return Promise.reject(res.error);
+                        return Promise.reject(res);
                     } else {
-                        return res.data;
+                        return res;
                     }
                 });
             });
