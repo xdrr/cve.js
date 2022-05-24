@@ -103,13 +103,35 @@
             return this._middleware.get('cve-id/'.concat(id));
         }
 
-        updateCveId(id, state, org) {
-            let record = { state, org };
+        updateCveId(id, state, org = undefined) {
+            let record = { state };
+
+            if (org)
+                record['org'] = org;
+
             return this._middleware.put('cve-id/'.concat(id), record);
         }
 
-        getCves() {
-            return this._middleware.get('cve');
+        getCves(opts) {
+            let query;
+
+            if (opts) {
+                query = {};
+                if (opts.hasOwnProperty('state'))
+                    query['cveState'] = opts.state;
+                if(opts.hasOwnProperty('modBefore'))
+                    query['cveRecordFilteredTimeModifiedLt'] = opts.modBefore;
+                if(opts.hasOwnProperty('modAfter'))
+                    query['cveRecordFilteredTimeModifiedGt'] = opts.modAfter;
+                if(opts.hasOwnProperty('count'))
+                    query['countOnly'] = 1;
+                if (opts.hasOwnProperty('assignerShort'))
+                    query['assignerShortName'] = opts.assignerShort;
+                if (opts.hasOwnProperty('assigner'))
+                    query['assigner'] = opts.assigner;
+            }
+
+            return this._middleware.get('cve', query);
         }
 
         getCve(id) {
@@ -117,11 +139,19 @@
         }
 
         createCve(id, schema) {
-            return this._middleware.post('cve/'.concat(id,'/cna'), undefined, schema);
+            return this._middleware.post('cve/'.concat(id, '/cna'), undefined, schema);
         }
 
         updateCve(id, schema) {
-            return this._middleware.put('cve/'.concat(id,'/cna'), undefined, schema);
+            return this._middleware.put('cve/'.concat(id, '/cna'), undefined, schema);
+        }
+
+        createRejectCve(id, schema) {
+            return this._middleware.post('cve/'.concat(id, '/reject'), undefined, schema);
+        }
+
+        updateRejectCve(id, schema) {
+            return this._middleware.put('cve/'.concat(id, '/reject'). undefined, schema);
         }
 
         getOrgInfo() {
@@ -300,7 +330,7 @@
                 type: 'getOrg',
             };
 
-            return this.send(msg);
+            return this.send(msg).then(reply => reply.data);
         }
 
         destroy() {
