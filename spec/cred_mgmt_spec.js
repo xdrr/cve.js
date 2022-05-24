@@ -33,13 +33,13 @@ describe("Middleware session mgmt", () => {
   it("registers new user", async () => {
     await expectAsync(
       cs.login(...user_1)
-    ).toBeResolvedTo('ok');
+    ).toBeResolvedTo({data: 'ok'});
   });
 
   it("logs out session", async () => {
     await expectAsync(
       cs.login(...user_1)
-    ).toBeResolvedTo('ok');
+    ).toBeResolvedTo({data: 'ok'});
 
     await expectAsync(
       cs.logout()
@@ -47,17 +47,23 @@ describe("Middleware session mgmt", () => {
   });
 
   it("rejects API methods without session", async () => {
-    return expectAsync(cs.getCveIds()).toBeRejected();
+    await expectAsync(
+      cs.getCveIds()
+    ).toBeRejectedWith({error: 'NO_SESSION', message: 'You are not logged in.'});
   });
 
   it("rejects API methods after logout", async () => {
     await expectAsync(
       cs.login(...user_1)
-    ).toBeResolvedTo('ok');
+    ).toBeResolvedTo({data: 'ok'});
 
     await expectAsync(
       cs.logout()
     ).toBeResolvedTo(true);
+
+    await expectAsync(
+      cs.getCveIds()
+    ).toBeRejected();
   });
 
   it("does not logout empty session", async () => {
@@ -69,12 +75,12 @@ describe("Middleware session mgmt", () => {
   it("switches accounts", async () => {
     await expectAsync(
       cs.login(user_1)
-    ).toBeResolvedTo('ok');
+    ).toBeResolvedTo({data: 'ok'});
 
     // Convention 1: call login multiple times
     await expectAsync(
       cs.login(user_2)
-    ).toBeResolvedTo('ok');
+    ).toBeResolvedTo({data: 'ok'});
 
     // Convention 2: logout then login
     await expectAsync(
