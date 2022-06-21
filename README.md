@@ -1,14 +1,13 @@
 # CVE.js
 
-CVE.js is a JS browser library for providing serverless access to the [CVE
-services REST API](https://github.com/CVEProject/cve-services).
+CVE.js is a JS client-side library for secure, serverless access to the [CVE services REST API](https://github.com/CVEProject/cve-services).
 
 ## Features
 
 CVE.js runs in the browser and provides:
 
- * Serverless access to the CVE services API.
- * Secure credential management through [Service Workers](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API).
+ * Serverless access to the MITRE [CVE services API](https://github.com/CVEProject/cve-services).
+ * Secure credential management solution using [Service Workers](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API).
  * Multi-user session management and session timeouts.
  
  The following browsers are currently supported:
@@ -19,7 +18,7 @@ CVE.js runs in the browser and provides:
  * Microsoft Edge (>= v. 99 preferred)
  * Safari
  
- All versions of Internet Explorer are not supported.
+ All versions of Internet Explorer are *not supported*.
 
 ## Installation
 
@@ -29,29 +28,29 @@ CVE.js can be integrated by the inclusion of the library in the appropriate comp
 <script src="cve.js"></script>
 ```
 
-Be sure to deploy `cve.js` and `sw.js` at the root of the component that will be
-accessing `CveServices`. The Service Worker will assume this root as its scope
-of control.
+Typically `cve.js` and `sw.js` are deployed at the root of the component that will provide access to the CVE Services API. The Service Worker will assume this root as its scope of control. If you need to install `sw.js` in a different location, be sure to specify its location each time you initialise a handle (see [Usage](#2-usage)).
 
-## How to use
+## Usage
 
-The library exposes the `CveServices` class to the `window` namespace.
+Initialise a new handle to `CveServices`:
 
 ```js
-let client = new CveServices("〈API-URL〉");
+let client = new CveServices();
 ```
 
-When an `〈API-URL〉` is not specified, it defaults to the production MITRE API.
+Want to specify a custom API end point for the MITRE CVE Services API? Need to customise the location where the service worker is installed? These can be customised when initialising the handle.
+
+``` js
+let client = new CveServices(<API-endpoint>,<sw-installation-path>);
+```
 
 ### Session management
 
-Before services may be requested from `CveServices`, a user must be logged in.
+Before services may be requested from `CveServices`, a user must be logged in. An error will be returned if no user is logged in or the last user's session timeed out.
 
 ``` js
 await client.login("user", "org", "key");
 ```
-
-After login, the active user's session will expire in 1 hour.
 
 The active user may be replaced by calling `login` with a different user's credentials:
 
@@ -65,41 +64,29 @@ The active session may be manually destroyed (along with the Service Worker in t
 await client.logout();
 ```
 
-### API Methods
+##### Timeout
 
-CVE services may be requested on behalf of the active user by calling the apppropriate API methods.
+After login, the active user will be *automatically logged out* after 1 hour.
+
+## API Methods
+
+Once a handle is established, CVE services may be requested on behalf of the active user by calling the apppropriate API methods.
 
 Each method returns a Promise resolving to the API return value upon success.
 
-#### Retrieve organisation's reserved CVE IDs
+### CVE IDs
+
+#### Retrieve the current organisation's reserved CVE IDs
 
 ```js
 client.getCveIds()
     .then(ids => console.log(ids));
 ```
 
-#### Get all CVE records
-
-```js
-await client.getCves();
-```
-
-#### Update a CVE record
-
-```js
-await client.updateCve('CVE-ABCD-EFGH', schema);
-```
-
-#### Create a new CVE record from a reserved ID
-
-```js
-await client.createCve('CVE-ABCD-EFGH', schema);
-```
-
 #### Update a CVE-ID record
 
 ```js
-await client.updateCveId('CVE-ABC-EFGH', new_record);
+await client.updateCveId('CVE-ABCD-EFGH', {...schema});
 ```
 
 #### Reserve CVE IDs - full options
@@ -116,14 +103,13 @@ client.reserveCveIds({
 
 #### Reserve a single CVE ID
 
-Reserves a CVE ID for the current year (as determined by the browser local
-time).
+Reserves a CVE ID for the current year (as determined by the browser local time).
 
 ```js
 await client.reserveCveId();
 ```
 
-Or the caller can specify the year in which to reserve.
+Alternatively, the caller may specify the year in which to reserve.
 
 ```js
 await client.reserveCveId(2012);
@@ -164,35 +150,92 @@ client.getCveId("2021-2222-1111")
     .then(cve => console.log(cve));
 ```
 
+### CVEs
+
+#### Get all CVE records
+
+```js
+await client.getCves();
+```
+
+#### Get a single CVE record
+
+``` js
+await client.getCve();
+```
+
+#### Update a CVE record
+
+```js
+await client.updateCve('CVE-ABCD-EFGH', schema);
+```
+
+#### Create a new CVE record from a reserved ID
+
+```js
+await client.createCve('CVE-ABCD-EFGH', {...schema});
+```
+
+#### Create a new CVE record in reject status
+
+``` js
+await client.createRejectCve('CVE-ABCD-EFGH', {...schema});
+```
+
+#### Update a CVE record in reject status
+
+``` js
+await client.updateRejectCve('CVE-ABCD-EFGH', {...schema});
+```
+
+### Organisations
+
 #### Get organisation info 
 
 ```js
-client.getOrgInfo()
+await client.getOrgInfo()
     .then(org => console.log(org));
 ```
 
-#### Get organisation's users
+#### Update organisation info
+
+``` js
+await client.updateOrgInfo({...orgInfo});
+```
+
+#### Create new user in current organisation
+
+``` js
+await client.createOrgUser({...userInfo});
+```
+
+#### Update existing organisation user
+
+``` js
+await client.updateOrgUser('username', {...newUserInfo});
+```
+
+#### Get organisation users
 
 ```js
-client.getOrgUsers()
+await client.getOrgUsers()
     .then(users => console.log(users));
 ```
 
 #### Get organisation's allocation quota
 
 ```js
-client.getOrgIdQuota()
+await client.getOrgIdQuota()
     .then(quota => console.log(quota));
 ```
 
-#### Get user record within organisation
+#### Get organisation user record
 
 ```js
-client.getOrgUser("user1")
+await client.getOrgUser("user1")
     .then(user => console.log(user));
 ```
 
 ## License
 
-This project is published under the MIT license. See `LICENSE` in the project
-root directory for a full copy of the license.
+This project is published under the MIT license. See `LICENSE` in the project root directory for a full copy of the license.
