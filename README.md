@@ -71,7 +71,7 @@ After login, the active user will be *automatically logged out* after 1 hour.
 
 ### Event notifications
 
-Event notifications are provided by the (Broadcast Channel)[https://developer.mozilla.org/en-US/docs/Web/API/Broadcast_Channel_API] Web API. 
+Event notifications are provided by the [Broadcast Channel](https://developer.mozilla.org/en-US/docs/Web/API/Broadcast_Channel_API) Web API. 
 
 To subscribe a handle to broadcast event, use the `on` method like so:
 
