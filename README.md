@@ -9,6 +9,7 @@ CVE.js runs in the browser and provides:
  * Serverless access to the MITRE [CVE services API](https://github.com/CVEProject/cve-services).
  * Secure credential management solution using [Service Workers](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API).
  * Multi-user session management and session timeouts.
+ * Broadcast event notification (similar to push notifications).
  
  The following browsers are currently supported:
  
@@ -68,172 +69,14 @@ await client.logout();
 
 After login, the active user will be *automatically logged out* after 1 hour.
 
-## API Methods
+### Event notifications
 
-Once a handle is established, CVE services may be requested on behalf of the active user by calling the apppropriate API methods.
+Event notifications are provided by the (Broadcast Channel)[https://developer.mozilla.org/en-US/docs/Web/API/Broadcast_Channel_API] Web API. 
 
-Each method returns a Promise resolving to the API return value upon success.
-
-### CVE IDs
-
-#### Retrieve the current organisation's reserved CVE IDs
-
-```js
-client.getCveIds()
-    .then(ids => console.log(ids));
-```
-
-#### Update a CVE-ID record
-
-```js
-await client.updateCveId('CVE-ABCD-EFGH', {...schema});
-```
-
-#### Reserve CVE IDs - full options
-
-```js
-client.reserveCveIds({
-    amount: 100,
-    cve_year: 2021,
-    short_name: "my_org_name",
-    batch_type: "sequential"
-})
-.then(res => console.log(res));
-```
-
-#### Reserve a single CVE ID
-
-Reserves a CVE ID for the current year (as determined by the browser local time).
-
-```js
-await client.reserveCveId();
-```
-
-Alternatively, the caller may specify the year in which to reserve.
-
-```js
-await client.reserveCveId(2012);
-```
-
-#### Reserve n sequential CVE IDs
-
-Reserve a number of sequential IDs for a given year.
-
-```js
-await client.reserveSeqCveIds(12, 2006);
-```
-
-Reserve a number of sequential IDs for the current year.
-
-```js
-await client.reserveSeqCveIds(99);
-```
-
-#### Reserve n nonsequential CVE IDs
-
-Reserve a number of sequential IDs for a given year.
-
-```js
-await client.reserveNonSeqCveIds(12, 2009);
-```
-
-Reserve a number of nonsequential IDs for the current year.
-
-```js
-await client.reserveNonSeqCveIds(27182818284);
-```
-
-#### Retrieve a specific CVE ID
-
-```js
-client.getCveId("2021-2222-1111")
-    .then(cve => console.log(cve));
-```
-
-### CVEs
-
-#### Get all CVE records
-
-```js
-await client.getCves();
-```
-
-#### Get a single CVE record
+To subscribe a handle to broadcast event, use the `on` method like so:
 
 ``` js
-await client.getCve();
-```
-
-#### Update a CVE record
-
-```js
-await client.updateCve('CVE-ABCD-EFGH', schema);
-```
-
-#### Create a new CVE record from a reserved ID
-
-```js
-await client.createCve('CVE-ABCD-EFGH', {...schema});
-```
-
-#### Create a new CVE record in reject status
-
-``` js
-await client.createRejectCve('CVE-ABCD-EFGH', {...schema});
-```
-
-#### Update a CVE record in reject status
-
-``` js
-await client.updateRejectCve('CVE-ABCD-EFGH', {...schema});
-```
-
-### Organisations
-
-#### Get organisation info 
-
-```js
-await client.getOrgInfo()
-    .then(org => console.log(org));
-```
-
-#### Update organisation info
-
-``` js
-await client.updateOrgInfo({...orgInfo});
-```
-
-#### Create new user in current organisation
-
-``` js
-await client.createOrgUser({...userInfo});
-```
-
-#### Update existing organisation user
-
-``` js
-await client.updateOrgUser('username', {...newUserInfo});
-```
-
-#### Get organisation users
-
-```js
-await client.getOrgUsers()
-    .then(users => console.log(users));
-```
-
-#### Get organisation's allocation quota
-
-```js
-await client.getOrgIdQuota()
-    .then(quota => console.log(quota));
-```
-
-#### Get organisation user record
-
-```js
-await client.getOrgUser("user1")
-    .then(user => console.log(user));
+client.on("logout").then(msg => alert(msg.message));
 ```
 
 ## License

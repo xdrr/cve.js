@@ -36,6 +36,7 @@
         constructor(serviceUri = 'https://cveawg.mitre.org/api', swPath = 'sw.js') {
             this._middleware = new CveServicesMiddleware(serviceUri, swPath);
             this._request = null;
+            this._channels = [];
         }
 
         // Session mgmt
@@ -46,6 +47,17 @@
 
         logout() {
             return this._middleware.destroy();
+        }
+
+        // Inter-instance communication.
+
+        on(chanName) {
+            return new Promise(resolve => {
+                let bc = new BroadcastChannel(chanName);
+                bc.onmessage = msg => {
+                    resolve(msg.data);
+                };
+            });
         }
 
         // API methods
@@ -334,6 +346,10 @@
         }
 
         destroy() {
+            // Broadcast logout event
+            let bc = new BroadcastChannel('logout');
+            bc.postMessage({'error': 'LOGOUT', message: 'The user has logged out'});
+
             if (this.registration) {
                 this.registration.unregister();
                 this.registration = undefined;
